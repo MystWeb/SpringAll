@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.proaimltd.mybatis.model.mapper.RoleMapper">
+    <resultMap id="BaseResultMap" type="com.proaimltd.mybatis.model.entity.Role">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="role_name" jdbcType="VARCHAR" property="roleName"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, role_name, create_time, update_time
+    </sql>
+    <select id="selectRoles" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_role
+    </select>
+    <select id="selectRolesByUserId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT t1.*
+        FROM t_role t1
+                 LEFT JOIN t_user_role t2 ON t1.id = t2.rid
+        WHERE 1 = 1
+          AND t2.uid = #{uid,jdbcType=BIGINT}
+    </select>
+    <select id="selectRoleByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_role
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteRoleByPrimaryKey" parameterType="java.lang.Long">
+        delete
+        from t_role
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insertRole" parameterType="com.proaimltd.mybatis.model.entity.Role">
+        insert into t_role (id, role_name, create_time,
+                            update_time)
+        values (#{id,jdbcType=BIGINT}, #{roleName,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+                #{updateTime,jdbcType=TIMESTAMP})
+    </insert>
+    <insert id="insertRoleSelective" parameterType="com.proaimltd.mybatis.model.entity.Role">
+        insert into t_role
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="roleName != null">
+                role_name,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="roleName != null">
+                #{roleName,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateRoleByPrimaryKeySelective" parameterType="com.proaimltd.mybatis.model.entity.Role">
+        update t_role
+        <set>
+            <if test="roleName != null">
+                role_name = #{roleName,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateRoleByPrimaryKey" parameterType="com.proaimltd.mybatis.model.entity.Role">
+        update t_role
+        set role_name   = #{roleName,jdbcType=VARCHAR},
+            create_time = #{createTime,jdbcType=TIMESTAMP},
+            update_time = #{updateTime,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+</mapper>

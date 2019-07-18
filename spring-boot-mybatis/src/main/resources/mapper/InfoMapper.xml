@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.proaimltd.mybatis.model.mapper.InfoMapper">
+  <resultMap id="BaseResultMap" type="com.proaimltd.mybatis.model.entity.Info">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="age" jdbcType="INTEGER" property="age" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, age, sex
+  </sql>
+  <select id="selectInfoByUserId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_info
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteInfoByPrimaryKey" parameterType="java.lang.Long">
+    delete from t_info
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insertInfo" parameterType="com.proaimltd.mybatis.model.entity.Info">
+    insert into t_info (id, age, sex)
+    values (#{id,jdbcType=BIGINT}, #{age,jdbcType=INTEGER}, #{sex,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertInfoSelective" parameterType="com.proaimltd.mybatis.model.entity.Info">
+    insert into t_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="age != null">
+        age,
+      </if>
+      <if test="sex != null">
+        sex,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="age != null">
+        #{age,jdbcType=INTEGER},
+      </if>
+      <if test="sex != null">
+        #{sex,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateInfoByPrimaryKeySelective" parameterType="com.proaimltd.mybatis.model.entity.Info">
+    update t_info
+    <set>
+      <if test="age != null">
+        age = #{age,jdbcType=INTEGER},
+      </if>
+      <if test="sex != null">
+        sex = #{sex,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateInfoByPrimaryKey" parameterType="com.proaimltd.mybatis.model.entity.Info">
+    update t_info
+    set age = #{age,jdbcType=INTEGER},
+      sex = #{sex,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

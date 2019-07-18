@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.proaimltd.mybatis.model.mapper.UserRoleMapper">
+  <resultMap id="BaseResultMap" type="com.proaimltd.mybatis.model.entity.UserRole">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="uid" jdbcType="BIGINT" property="uid" />
+    <result column="rid" jdbcType="BIGINT" property="rid" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, uid, rid
+  </sql>
+  <select id="selectUserRoleByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_user_role
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteUserRoleByPrimaryKey" parameterType="java.lang.Long">
+    delete from t_user_role
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteUserRoleByUid" parameterType="java.lang.Long">
+    delete from t_user_role
+    where uid = #{uid,jdbcType=BIGINT}
+  </delete>
+  <insert id="insertUserRole" parameterType="com.proaimltd.mybatis.model.entity.UserRole">
+    insert into t_user_role (id, uid, rid)
+    values (#{id,jdbcType=BIGINT}, #{uid,jdbcType=BIGINT}, #{rid,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertUserRoleSelective" parameterType="com.proaimltd.mybatis.model.entity.UserRole">
+    insert into t_user_role
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="uid != null">
+        uid,
+      </if>
+      <if test="rid != null">
+        rid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="uid != null">
+        #{uid,jdbcType=BIGINT},
+      </if>
+      <if test="rid != null">
+        #{rid,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateUserRoleByPrimaryKeySelective" parameterType="com.proaimltd.mybatis.model.entity.UserRole">
+    update t_user_role
+    <set>
+      <if test="uid != null">
+        uid = #{uid,jdbcType=BIGINT},
+      </if>
+      <if test="rid != null">
+        rid = #{rid,jdbcType=BIGINT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateUserRoleByPrimaryKey" parameterType="com.proaimltd.mybatis.model.entity.UserRole">
+    update t_user_role
+    set uid = #{uid,jdbcType=BIGINT},
+      rid = #{rid,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>
