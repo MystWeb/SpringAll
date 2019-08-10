@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.proaimltd.mybatis.restful.model.mapper.RoleMapper">
+    <resultMap id="BaseResultMap" type="com.proaimltd.mybatis.restful.model.entity.Role">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <collection property="permissions" column="id"
+                    fetchType="eager"
+                    ofType="com.proaimltd.mybatis.restful.model.entity.Permission"
+                    javaType="java.util.HashSet"
+                    select="com.proaimltd.mybatis.restful.model.mapper.PermissionMapper.getPermissionsByRoleId"/>
+    </resultMap>
+    <sql id="Example_Where_Clause">
+        <where>
+            <foreach collection="oredCriteria" item="criteria" separator="or">
+                <if test="criteria.valid">
+                    <trim prefix="(" prefixOverrides="and" suffix=")">
+                        <foreach collection="criteria.criteria" item="criterion">
+                            <choose>
+                                <when test="criterion.noValue">
+                                    and ${criterion.condition}
+                                </when>
+                                <when test="criterion.singleValue">
+                                    and ${criterion.condition} #{criterion.value}
+                                </when>
+                                <when test="criterion.betweenValue">
+                                    and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                                </when>
+                                <when test="criterion.listValue">
+                                    and ${criterion.condition}
+                                    <foreach close=")" collection="criterion.value" item="listItem" open="("
+                                             separator=",">
+                                        #{listItem}
+                                    </foreach>
+                                </when>
+                            </choose>
+                        </foreach>
+                    </trim>
+                </if>
+            </foreach>
+        </where>
+    </sql>
+    <sql id="Base_Column_List">
+        id, name, description
+    </sql>
+    <select id="getRolesByUserId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT t1.id,
+               t1.NAME,
+               t1.description
+        FROM tb_role t1,
+             user_role t2
+        WHERE t1.id = t2.role_id
+          AND t2.user_id = #{userId, jdbcType=BIGINT}
+    </select>
+    <select id="selectRoleByExample" parameterType="com.proaimltd.mybatis.restful.model.entity.RoleExample"
+            resultMap="BaseResultMap">
+        select
+        <if test="distinct">
+            distinct
+        </if>
+        'false' as QUERYID,
+        <include refid="Base_Column_List"/>
+        from tb_role
+        <if test="_parameter != null">
+            <include refid="Example_Where_Clause"/>
+        </if>
+        <if test="orderByClause != null">
+            order by ${orderByClause}
+        </if>
+    </select>
+    <select id="selectRoleByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from tb_role
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteRoleByPrimaryKey" parameterType="java.lang.Long">
+        delete
+        from tb_role
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insertRole" parameterType="com.proaimltd.mybatis.restful.model.entity.Role">
+        insert into tb_role (id, name, description)
+        values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR})
+    </insert>
+    <insert id="insertRoleSelective" parameterType="com.proaimltd.mybatis.restful.model.entity.Role">
+        insert into tb_role
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+            <if test="description != null">
+                description,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                #{description,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateRoleByPrimaryKeySelective" parameterType="com.proaimltd.mybatis.restful.model.entity.Role">
+        update tb_role
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                description = #{description,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateRoleByPrimaryKey" parameterType="com.proaimltd.mybatis.restful.model.entity.Role">
+        update tb_role
+        set name        = #{name,jdbcType=VARCHAR},
+            description = #{description,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+</mapper>

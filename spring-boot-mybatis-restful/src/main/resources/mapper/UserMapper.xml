@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.proaimltd.mybatis.restful.model.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.proaimltd.mybatis.restful.model.entity.User">
+        <!-- resultMap:使用association和collection完成一对一和一对多高级映射 -->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="is_delete" jdbcType="BIT" property="isDelete"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <!-- association处理has-a关系 将关联查询信息映射到一个pojo类中 -->
+        <!-- 场合:为了方便获取关联信息可以使用association将关联租户映射为pojo，比如:查询租户及关联用户信息 -->
+        <!--注意：这种方式javaType必须指定，表示tenant的类型是Tenant，否则会报错 -->
+        <!--<association property="tenant" column="id" javaType="Tenant"
+                     select="com.proaimltd.mybatis.restful.model.mapper.TenantMapper.getTenantByTenantId"/>-->
+
+        <!-- collection:作用:将关联查询信息映射到一个list集合中 -->
+        <!-- 场合:为了方便获取关联信息可以使用collection将关联信息映射到list集合中，比如:查询用户权限范围模块和功能，可使用collection将模块和功能列表映射到list中 -->
+        <collection property="roles" column="id"
+                    select="com.proaimltd.mybatis.restful.model.mapper.RoleMapper.getRolesByUserId"/>
+    </resultMap>
+    <sql id="Example_Where_Clause">
+        <where>
+            <foreach collection="oredCriteria" item="criteria" separator="or">
+                <if test="criteria.valid">
+                    <trim prefix="(" prefixOverrides="and" suffix=")">
+                        <foreach collection="criteria.criteria" item="criterion">
+                            <choose>
+                                <when test="criterion.noValue">
+                                    and ${criterion.condition}
+                                </when>
+                                <when test="criterion.singleValue">
+                                    and ${criterion.condition} #{criterion.value}
+                                </when>
+                                <when test="criterion.betweenValue">
+                                    and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                                </when>
+                                <when test="criterion.listValue">
+                                    and ${criterion.condition}
+                                    <foreach close=")" collection="criterion.value" item="listItem" open="("
+                                             separator=",">
+                                        #{listItem}
+                                    </foreach>
+                                </when>
+                            </choose>
+                        </foreach>
+                    </trim>
+                </if>
+            </foreach>
+        </where>
+    </sql>
+    <sql id="Base_Column_List">
+        id, username, is_delete, create_time, update_time
+    </sql>
+    <select id="selectUserByExample" parameterType="com.proaimltd.mybatis.restful.model.entity.UserExample"
+            resultMap="BaseResultMap">
+        select
+        <if test="distinct">
+            distinct
+        </if>
+        'false' as QUERYID,
+        <include refid="Base_Column_List"/>
+        from tb_user
+        <if test="_parameter != null">
+            <include refid="Example_Where_Clause"/>
+        </if>
+        <if test="orderByClause != null">
+            order by ${orderByClause}
+        </if>
+    </select>
+    <select id="selectUserByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from tb_user
+        where id = #{id,jdbcType=BIGINT}
+        and is_delete = 0
+    </select>
+    <update id="deleteUserByPrimaryKey" parameterType="java.lang.Long">
+        update tb_user
+        set is_delete = 1
+        where id = #{id,jdbcType=BIGINT}
+          and is_delete = 0
+    </update>
+    <insert id="insertUser" parameterType="com.proaimltd.mybatis.restful.model.entity.User">
+        insert into tb_user (id, username, is_delete,
+                             create_time, update_time)
+        values (#{id,jdbcType=BIGINT}, #{username,jdbcType=VARCHAR}, #{isDelete,jdbcType=BIT},
+                #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
+    </insert>
+    <insert id="insertUserSelective" parameterType="com.proaimltd.mybatis.restful.model.entity.User">
+        insert into tb_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="username != null">
+                username,
+            </if>
+            <if test="isDelete != null">
+                is_delete,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="username != null">
+                #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="isDelete != null">
+                #{isDelete,jdbcType=BIT},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateUserByPrimaryKeySelective" parameterType="com.proaimltd.mybatis.restful.model.entity.User">
+        update tb_user
+        <set>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="isDelete != null">
+                is_delete = #{isDelete,jdbcType=BIT},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+        and is_delete = 0
+    </update>
+    <update id="updateUserByPrimaryKey" parameterType="com.proaimltd.mybatis.restful.model.entity.User">
+        update tb_user
+        set username    = #{username,jdbcType=VARCHAR},
+            is_delete   = #{isDelete,jdbcType=BIT},
+            create_time = #{createTime,jdbcType=TIMESTAMP},
+            update_time = #{updateTime,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=BIGINT}
+          and is_delete = 0
+    </update>
+</mapper>
