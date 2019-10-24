@@ -564,3 +564,276 @@ public class ValidatorAspect {
 	"message": "name不能为空",
 	"path": "/aspect"
 }`
+
+## List校验
+
+### 原因
+
+@Valid只能校验JavaBean，而List<E>不是JavaBean所以校验会失败，尝试了三种解决办法，比较推荐方法3，其他两种大家也可以学习一下
+
+### 方法1：对List进行Wrapper
+
+既然List不是JavaBean，那我们就把它封装成JavaBean，我们定义一个ListWrapper类如下：
+
+```java
+package com.myst.validated.util;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+@Setter
+public class ListWrapper<E> {
+
+    @Valid
+    private List<E> list;
+
+    public ListWrapper() {
+        this.list = new ArrayList<>();
+    }
+
+    public ListWrapper(List<E> list) {
+        this.list = list;
+    }
+
+}
+```
+
+### 方法1：Controller使用方法
+
+```java
+    // 使用包装类对list进行验证
+    @PostMapping("/insert/all")
+    public String insertList(@Valid @RequestBody ListWrapper<User> listWrapper, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            log.error(Objects.requireNonNull(bindingResult.getFieldError()).toString());
+            return bindingResult.getFieldError().getDefaultMessage();
+        }
+        return "校验通过";
+    }
+```
+
+这样就可以对list进行校验了
+
+注意：
+
+由于对list进行了包装，如果我们传参的时候
+
+[{},{}..]要改为{“list”: [{},{}..]}
+
+### 方法2：使用@Validated+@Valid
+
+在controller类上面增加@Validated注解，并且删除方法参数中的BindingResult bindingResult（因为这个参数已经没有用了，异常统一有controller返回了）
+
+```java
+@Slf4j
+@Validated
+@RestController
+@RequestMapping("/users")
+public class ValidController {
+    // 使用包装类对list进行验证
+    @PostMapping("/insert/all")
+    public String insertList(@Valid @RequestBody List<User> users) {
+        return "校验通过";
+    }
+}
+```
+
+可以看到可以对参数进行校验了，但还还有一个问题，那就是这个不是我们想要的返回格式，它controller自己返回的格式，所以我们需要做一个统一异常处理，代码如下： 
+
+```java
+package com.myst.validated.handler;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import java.util.Set;
+
+/**
+ * 控制器异常消息统一处理
+ */
+@Slf4j
+@RestControllerAdvice
+public class ControllerExceptionHandler {
+
+    @ExceptionHandler
+    @ResponseBody
+    public String handle(ConstraintViolationException exception) {
+        log.error(String.valueOf(exception));
+        Set<ConstraintViolation<?>> violations = exception.getConstraintViolations();
+        StringBuilder builder = new StringBuilder();
+        for (ConstraintViolation violation : violations) {
+            builder.append(violation.getMessage());
+            break;
+        }
+        return builder.toString();
+    }
+}
+
+```
+
+### 方法3：自定义一个List
+
+先上代码后说明，先定义一个ValidList
+
+```java
+package com.myst.validated.util;
+
+import lombok.Data;
+
+import javax.validation.Valid;
+import java.util.*;
+
+/**
+ * 可被校验的List
+ *
+ * @param <E> 元素类型
+ */
+@Data
+public class ValidatableList<E> implements List<E> {
+    @Valid
+    private List<E> list = new LinkedList<>();
+
+    @Override
+    public int size() {
+        return list.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return list.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return list.contains(o);
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return list.iterator();
+    }
+
+    @Override
+    public Object[] toArray() {
+        return list.toArray();
+    }
+
+    @Override
+    public <T> T[] toArray(T[] a) {
+        return list.toArray(a);
+    }
+
+    @Override
+    public boolean add(E e) {
+        return list.add(e);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        return list.remove(o);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c) {
+        return list.containsAll(c);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends E> c) {
+        return list.addAll(c);
+    }
+
+    @Override
+    public boolean addAll(int index, Collection<? extends E> c) {
+        return list.addAll(index, c);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        return list.removeAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        return list.retainAll(c);
+    }
+
+    @Override
+    public void clear() {
+        list.clear();
+    }
+
+    @Override
+    public E get(int index) {
+        return list.get(index);
+    }
+
+    @Override
+    public E set(int index, E element) {
+        return list.set(index, element);
+    }
+
+    @Override
+    public void add(int index, E element) {
+        list.add(index, element);
+    }
+
+    @Override
+    public E remove(int index) {
+        return list.remove(index);
+    }
+
+    @Override
+    public int indexOf(Object o) {
+        return list.indexOf(o);
+    }
+
+    @Override
+    public int lastIndexOf(Object o) {
+        return list.lastIndexOf(o);
+    }
+
+    @Override
+    public ListIterator<E> listIterator() {
+        return list.listIterator();
+    }
+
+    @Override
+    public ListIterator<E> listIterator(int index) {
+        return list.listIterator(index);
+    }
+
+    @Override
+    public List<E> subList(int fromIndex, int toIndex) {
+        return list.subList(fromIndex, toIndex);
+    }
+
+}
+```
+
+对比方法3和方法1，有没有觉得代码有点相似，新建一个类，并且让他实现List接口，使这个类即具有了JavaBean的特性，又具有了List的特性，比方法1简单优雅很多。
+
+只需要把List换成ValidList就可以了，还不需要多统一异常处理。
+
+```java
+    // 使用包装类对list进行验证
+    @PostMapping("/insert/all")
+    public String insertList(@Valid @RequestBody ValidatableList<User> users, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            log.error(Objects.requireNonNull(bindingResult.getFieldError()).toString());
+            return bindingResult.getFieldError().getDefaultMessage();
+        }
+        return "校验通过";
+    }
+```
+
+参考： https://stackoverflow.com/questions/28150405/validation-of-a-list-of-objects-in-spring/36313615#36313615 
