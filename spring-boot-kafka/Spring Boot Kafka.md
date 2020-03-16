@@ -64,6 +64,15 @@ docker run -d --name kafka --publish 9092:9092 \
 
 docker run -it -d --name kafka-manager --link zookeeper_1:zookeeper --link kafka_1:kafka -p 9000:9000 -e ZK_HOSTS=zookeeper:2181 solsson/kafka-manager
 
+# https://blog.csdn.net/lblblblblzdx/article/details/80548294
+# kafka集群搭建
+docker run -dit --name kafka1 \
+-p 9093:9093 \
+-e KAFKA_BROKER_ID=1 \
+-e KAFKA_ZOOKEEPER_CONNECT=192.168.100.110:2181 \
+-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://192.168.100.110:9093 \
+-e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9093 wurstmeister/kafka
+
 # Kafka Manager访问：localhost:9000
 # Cluster Zookeeper Hosts：zookeeper:2181
 ```
