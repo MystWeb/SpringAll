@@ -318,7 +318,77 @@ public class KafkaSimpleConsumer {
 }
 ```
 
-#### 2.4 测试整合结果
+#### 2.4 动态加载@KafkaListener的topics
+
+因为topics肯定会随着业务的发展而不断增加，所以`@KafkaListener`注解下的topics字段肯定不能像demo一样写死固定的topic。
+
+topics支持数组或常量否则提示：`Attribute value must be constant`
+
+```java
+@KafkaListener(topics = {KafkaTopicConstants.DEFAULT_TOPIC,KafkaTopicConstants.DEFAULT_TOPIC2})
+```
+
+既然topics字段需要一个字符串数组，那我们可以`${}`来注入字符串，然后通过`spel`语言进行字符串分割来动态生成一个字符串数组。
+
+`application.properties`中配置用逗号隔开的多个topic。
+
+```properties
+# 配置topic，多个topic用逗号隔开
+topics=topic1,topic2,topic3
+```
+
+`spel`语言读取配置文件中topics的Value
+
+```java
+@KafkaListener(topics = {"#{'${topics}'.split(',')}"}
+```
+
+如果配置文件未预先配置topic或读取不到配置信息
+
+Spring在加载`@KafkaListener`对应的消费者bean时(下称`ConsumerListener`)，在配置中找不到topics，就会报如下的错误：
+
+```java
+Could not resolve placeholder 'topics' in value "#{'${topics}'.split(',')}"
+```
+
+但是这个解决方案，还是不太友好。虽然我们可以采用`apollo`或者`disconf`等分布式配置中心来管理配置文件，但依然没有解决很容易遗忘配置topics的问题。
+
+这时候，我们应该回顾Spring Boot配置属性加载的相关内容了。
+
+既然配置文件能解决${topics}被替换的问题，那么加载优先级更高的配置自然也可以解决该问题。而优先级比配置文件更高的配置中，我们可以发现Java系统参数`System.getProperties()`是个可以利用的点。
+
+我们可以新创建一个`KafkaTopicConfig`的配置类，加上`@Configuration`注解，然后在该配置类初始化后通过`System.setProperty("topics", topics)`把topics加到系统参数中。
+
+具体在bean初始化后执行指定方法做法有四种，实现 `InitializingBean`接口定制初始化后的方法，通过  元素的 `init-method`属性指定初始化后调用的操作，在指定方法上加上`@PostConstruct`来指定该方法在初始化后调用，以及最简单的构造器。
+
+本文选择了实现 `InitializingBean`接口来完成该操作。具体代码如下：
+
+```java
+@Configuration
+public class KafkaTopicConfig implements InitializingBean {
+
+    @Override
+    public void afterPropertiesSet() {
+        String topics = Sets.newHashSet(KafkaTopicEnum.values()).stream()
+                .map(KafkaTopicEnum::getTopic).collect(Collectors.joining(","));
+        System.setProperty("topics", topics);
+    }
+}
+```
+
+然后还需要注意的一点就是，`KafkaTopicConfig`配置类必须在`ConsumerListener`类之前加载到Spring的容器内，否则依然会在加载`ConsumerListener`类时报找不到topics的错误。
+
+而Spring Boot的bean装配规则是根据Application类所在的包位置从近到远进行扫描的，所以如果`KafkaTopicConfig`所在目录离Application的距离比`ConsumerListener`所在目录更远，就会导致`ConsumerListener`在`KafkaTopicConfig`之前加载。
+
+为了避免出现这种情况，我们必须调整这两个bean的加载顺序。具体修改加载bean加载顺序的方式有很多种，我们采用了在`ConsumerListener`类上加`DependsOn`注解的方式来解决，如下所示：
+
+```java
+@DependsOn(value = "kafkaTopicConfig")
+```
+
+至此，动态加载`@KafkaListener`的topics的问题就被完美解决了。
+
+#### 2.5 测试整合结果
 
 ```
 @Slf4j
@@ -493,6 +563,8 @@ public class KafkaBeanConsumer {
 }
 ```
 
+
+
 参考文章：
 
 https://juejin.im/entry/5a9e65296fb9a028dc408af5
@@ -502,5 +574,7 @@ https://juejin.im/user/5c80ad90e51d451aaa21b86d
 https://www.cnblogs.com/telwanggs/p/10863555.html
 
 https://www.jianshu.com/p/9bf9809b7491
+
+https://juejin.im/post/5d145d0ff265da1bb003d09c
 
 #### [java – Spring Kafka-将KafkaTemplate与Producer Listener配置并使用Listenable Future注册回调之间的区别](https://codeday.me/bug/20190627/1305145.html)
