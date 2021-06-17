@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myst.web.upload.file.mapper.FileMapper">
+  <resultMap id="BaseResultMap" type="cn.myst.web.upload.file.model.file.File">
+    <!--@mbg.generated-->
+    <!--@Table tb_file-->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="md5" jdbcType="VARCHAR" property="md5" />
+    <result column="path" jdbcType="VARCHAR" property="path" />
+    <result column="upload_time" jdbcType="TIMESTAMP" property="uploadTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, `name`, md5, `path`, upload_time
+  </sql>
+  <update id="updateBatchSelective" parameterType="java.util.List">
+    <!--@mbg.generated-->
+    update tb_file
+    <trim prefix="set" suffixOverrides=",">
+      <trim prefix="`name` = case" suffix="end,">
+        <foreach collection="list" index="index" item="item">
+          <if test="item.name != null">
+            when id = #{item.id,jdbcType=BIGINT} then #{item.name,jdbcType=VARCHAR}
+          </if>
+        </foreach>
+      </trim>
+      <trim prefix="md5 = case" suffix="end,">
+        <foreach collection="list" index="index" item="item">
+          <if test="item.md5 != null">
+            when id = #{item.id,jdbcType=BIGINT} then #{item.md5,jdbcType=VARCHAR}
+          </if>
+        </foreach>
+      </trim>
+      <trim prefix="`path` = case" suffix="end,">
+        <foreach collection="list" index="index" item="item">
+          <if test="item.path != null">
+            when id = #{item.id,jdbcType=BIGINT} then #{item.path,jdbcType=VARCHAR}
+          </if>
+        </foreach>
+      </trim>
+      <trim prefix="upload_time = case" suffix="end,">
+        <foreach collection="list" index="index" item="item">
+          <if test="item.uploadTime != null">
+            when id = #{item.id,jdbcType=BIGINT} then #{item.uploadTime,jdbcType=TIMESTAMP}
+          </if>
+        </foreach>
+      </trim>
+    </trim>
+    where id in
+    <foreach close=")" collection="list" item="item" open="(" separator=", ">
+      #{item.id,jdbcType=BIGINT}
+    </foreach>
+  </update>
+  <insert id="batchInsert" keyColumn="id" keyProperty="id" parameterType="map" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into tb_file
+    (`name`, md5, `path`, upload_time)
+    values
+    <foreach collection="list" item="item" separator=",">
+      (#{item.name,jdbcType=VARCHAR}, #{item.md5,jdbcType=VARCHAR}, #{item.path,jdbcType=VARCHAR}, 
+        #{item.uploadTime,jdbcType=TIMESTAMP})
+    </foreach>
+  </insert>
+</mapper>
